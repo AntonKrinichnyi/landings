@@ -6,7 +6,7 @@ import pytest
 from jose import jwt
 from unittest.mock import AsyncMock, MagicMock
 
-from core_app.models import Lead, Offer
+from core_app.db.models import Lead, Offer
 
 AFFILIATE_ID = UUID("11111111-1111-1111-1111-111111111111")
 OFFER_ID = UUID("22222222-2222-2222-2222-222222222222")
