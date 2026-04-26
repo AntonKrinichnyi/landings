@@ -14,7 +14,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-  core:
+  core_app:
     build: ./core_app
     ports:
       - "8002:8000"
