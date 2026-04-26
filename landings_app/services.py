@@ -31,9 +31,14 @@ async def token_auth(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Missing 'id' claim in token",
             )
-        return UUID(str(raw_id))
+        try:
+            return UUID(str(raw_id))
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+            ) from e
 
-    except (JWTError, ValueError) as e:
+    except (JWTError) as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
         ) from e
