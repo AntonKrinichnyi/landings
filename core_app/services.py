@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose.exceptions import JWTError
 from jose import jwt
@@ -10,6 +10,8 @@ from core_app.config import settings
 
 _token_auth_scheme = HTTPBearer()
 
+async def get_redis(request: Request):
+    return request.app.state.redis
 
 async def token_auth(
     credentials: HTTPAuthorizationCredentials = Depends(_token_auth_scheme),

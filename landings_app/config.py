@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
 
+    REDIS_URL: str
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(BASE_DIR, ".env"),
         extra="ignore"
