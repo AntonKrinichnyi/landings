@@ -5,7 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose.exceptions import JWTError
 from jose import jwt
 
-from core_app.config import settings
+from landings_app.config import settings
 
 
 _token_auth_scheme = HTTPBearer()
