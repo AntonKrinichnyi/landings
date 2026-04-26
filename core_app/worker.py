@@ -6,8 +6,8 @@ from datetime import datetime
 
 import redis.asyncio as aioredis
 
-from core_app.db.connection import session_factory
-from core_app.db.models import Lead
+from core_app.db.connection import async_session_factory
+from core_app.models import Lead
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ async def _process_lead(redis_client: aioredis.Redis, raw: str) -> None:
         logger.info("Duplicate lead skipped: %s / %s", data["name"], data["phone"])
         return
 
-    async with session_factory() as session:
+    async with async_session_factory() as session:
         lead = Lead(
             name=data["name"],
             phone=data["phone"],

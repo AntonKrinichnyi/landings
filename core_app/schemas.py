@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 class LeadResponseSchema(BaseModel):
     id: uuid.UUID
@@ -11,6 +11,8 @@ class LeadResponseSchema(BaseModel):
     offer_id: uuid.UUID
     affiliate_id: uuid.UUID
     created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class DateGroupSchema(BaseModel):

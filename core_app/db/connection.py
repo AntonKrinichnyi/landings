@@ -9,8 +9,8 @@ class Base(DeclarativeBase):
 
 engine = create_async_engine(settings.db_url)
 
-session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 async def get_db():
-    async with session_factory() as session:
+    async with async_session_factory() as session:
         yield session

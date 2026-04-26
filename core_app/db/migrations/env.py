@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 from core_app.config import settings
 from core_app.db.connection import Base
-from core_app.db.models import Lead, Offer, Affiliate
+from core_app.models import Lead, Offer, Affiliate
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

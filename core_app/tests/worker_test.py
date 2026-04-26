@@ -5,7 +5,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from core_app.worker import DEDUP_TTL, _dedup_key, _process_lead
-from core_app.db.models import Lead
+from core_app.models import Lead
+from core_app.tests.services_for_tests import AFFILIATE_ID, OFFER_ID, mock_redis
 
 
 AFFILIATE_ID = str(uuid.UUID("11111111-1111-1111-1111-111111111111"))
@@ -54,6 +55,7 @@ class TestProcessLeadNew:
         r.set = AsyncMock(return_value=True)
         return r
 
+    @pytest.mark.asyncio
     async def test_redis_set_called_with_correct_args(self, redis_new: AsyncMock):
         mock_session = AsyncMock()
         mock_ctx = MagicMock()
@@ -69,6 +71,7 @@ class TestProcessLeadNew:
         assert kwargs.get("ex") == DEDUP_TTL
         assert kwargs.get("nx") is True
 
+    @pytest.mark.asyncio
     async def test_lead_added_to_session(self, redis_new: AsyncMock):
         mock_session = AsyncMock()
         mock_ctx = MagicMock()
@@ -80,6 +83,7 @@ class TestProcessLeadNew:
 
         mock_session.add.assert_called_once()
 
+    @pytest.mark.asyncio
     async def test_session_committed(self, redis_new: AsyncMock):
         mock_session = AsyncMock()
         mock_ctx = MagicMock()
@@ -91,6 +95,7 @@ class TestProcessLeadNew:
 
         mock_session.commit.assert_awaited_once()
 
+    @pytest.mark.asyncio
     async def test_lead_saved_with_correct_fields(self, redis_new: AsyncMock):
 
         mock_session = AsyncMock()
@@ -118,6 +123,7 @@ class TestProcessLeadDuplicate:
         r.set = AsyncMock(return_value=None)
         return r
 
+    @pytest.mark.asyncio
     async def test_duplicate_skips_db_write(self, redis_dup: AsyncMock):
         mock_session = AsyncMock()
         mock_ctx = MagicMock()
@@ -129,6 +135,7 @@ class TestProcessLeadDuplicate:
 
         mock_factory.assert_not_called()
 
+    @pytest.mark.asyncio
     async def test_duplicate_does_not_commit(self, redis_dup: AsyncMock):
         mock_session = AsyncMock()
         mock_ctx = MagicMock()
@@ -140,6 +147,7 @@ class TestProcessLeadDuplicate:
 
         mock_session.commit.assert_not_awaited()
 
+    @pytest.mark.asyncio
     async def test_redis_set_still_checked_for_duplicate(self, redis_dup: AsyncMock):
         mock_session = AsyncMock()
         mock_ctx = MagicMock()

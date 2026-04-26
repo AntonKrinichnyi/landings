@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from httpx import AsyncClient
 from fastapi import status
 
@@ -10,11 +11,15 @@ from core_app.tests.services_for_tests import (
     OFFER_ID,
     _set_db_leads,
     make_lead,
+    client,
+    mock_db_session,
+    mock_redis
 )
 
 
 class TestLeadsAuth:
-    async def test_no_token_returns_403(self):
+    @pytest.mark.asyncio
+    async def test_no_token_returns_401(self):
         app.dependency_overrides.clear()
 
         from httpx import ASGITransport, AsyncClient
@@ -24,12 +29,13 @@ class TestLeadsAuth:
                 "/leads",
                 params={"date_from": "2026-01-01", "date_to": "2026-12-31", "group": "date"},
             )
-        assert resp.status_code == status.HTTP_403_FORBIDDEN
+        assert resp.status_code == status.HTTP_401_UNAUTHORIZED
 
+    @pytest.mark.asyncio
     async def test_invalid_token_returns_401(self):
         app.dependency_overrides.clear()
 
-        with patch("core_app.dependencies.settings") as ms:
+        with patch("core_app.services.settings") as ms:
             ms.jwt_secret = "test-secret"
             ms.jwt_algorithm = "HS256"
             from httpx import ASGITransport, AsyncClient
@@ -44,18 +50,22 @@ class TestLeadsAuth:
 
 
 class TestLeadsValidation:
+    @pytest.mark.asyncio
     async def test_missing_date_from_returns_422(self, client: AsyncClient):
         resp = await client.get("/leads", params={"date_to": "2026-12-31", "group": "date"})
         assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    @pytest.mark.asyncio
     async def test_missing_date_to_returns_422(self, client: AsyncClient):
         resp = await client.get("/leads", params={"date_from": "2026-01-01", "group": "date"})
         assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    @pytest.mark.asyncio
     async def test_missing_group_returns_422(self, client: AsyncClient):
         resp = await client.get("/leads", params={"date_from": "2026-01-01", "date_to": "2026-12-31"})
         assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    @pytest.mark.asyncio
     async def test_invalid_group_value_returns_422(self, client: AsyncClient):
         resp = await client.get(
             "/leads",
@@ -63,6 +73,7 @@ class TestLeadsValidation:
         )
         assert resp.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    @pytest.mark.asyncio
     async def test_invalid_date_format_returns_422(self, client: AsyncClient):
         resp = await client.get(
             "/leads",
@@ -72,6 +83,7 @@ class TestLeadsValidation:
 
 
 class TestLeadsGroupByDate:
+    @pytest.mark.asyncio
     async def test_empty_result(self, client: AsyncClient):
         resp = await client.get(
             "/leads",
@@ -80,6 +92,7 @@ class TestLeadsGroupByDate:
         assert resp.status_code == status.HTTP_200_OK
         assert resp.json() == []
 
+    @pytest.mark.asyncio
     async def test_single_lead_creates_one_bucket(
         self, client: AsyncClient, mock_db_session: AsyncMock
     ):
@@ -97,6 +110,7 @@ class TestLeadsGroupByDate:
         assert data[0]["count"] == 1
         assert len(data[0]["leads"]) == 1
 
+    @pytest.mark.asyncio
     async def test_two_leads_same_day_grouped_together(
         self, client: AsyncClient, mock_db_session: AsyncMock
     ):
@@ -114,6 +128,7 @@ class TestLeadsGroupByDate:
         assert len(data) == 1
         assert data[0]["count"] == 2
 
+    @pytest.mark.asyncio
     async def test_leads_on_different_days_create_separate_buckets(
         self, client: AsyncClient, mock_db_session: AsyncMock
     ):
@@ -133,6 +148,7 @@ class TestLeadsGroupByDate:
         assert "2026-04-23" in dates
         assert "2026-04-24" in dates
 
+    @pytest.mark.asyncio
     async def test_buckets_are_sorted_by_date(
         self, client: AsyncClient, mock_db_session: AsyncMock
     ):
@@ -153,6 +169,7 @@ class TestLeadsGroupByDate:
 
 
 class TestLeadsGroupByOffer:
+    @pytest.mark.asyncio
     async def test_empty_result(self, client: AsyncClient):
         resp = await client.get(
             "/leads",
@@ -161,6 +178,7 @@ class TestLeadsGroupByOffer:
         assert resp.status_code == status.HTTP_200_OK
         assert resp.json() == []
 
+    @pytest.mark.asyncio
     async def test_single_offer_bucket(
         self, client: AsyncClient, mock_db_session: AsyncMock
     ):
@@ -173,9 +191,10 @@ class TestLeadsGroupByOffer:
         )
         data = resp.json()
         assert len(data) == 1
-        assert data[0]["offer_name"] == "Summer Deal"
+        assert data[0]["name"] == "Summer Deal"
         assert data[0]["count"] == 1
 
+    @pytest.mark.asyncio
     async def test_two_leads_same_offer_grouped_together(
         self, client: AsyncClient, mock_db_session: AsyncMock
     ):
@@ -192,8 +211,9 @@ class TestLeadsGroupByOffer:
         data = resp.json()
         assert len(data) == 1
         assert data[0]["count"] == 2
-        assert data[0]["offer_name"] == "Campaign A"
+        assert data[0]["name"] == "Campaign A"
 
+    @pytest.mark.asyncio
     async def test_different_offers_create_separate_buckets(
         self, client: AsyncClient, mock_db_session: AsyncMock
     ):
@@ -211,9 +231,10 @@ class TestLeadsGroupByOffer:
         )
         data = resp.json()
         assert len(data) == 2
-        names = {g["offer_name"] for g in data}
+        names = {g["name"] for g in data}
         assert names == {"Offer A", "Offer B"}
 
+    @pytest.mark.asyncio
     async def test_response_contains_lead_details(
         self, client: AsyncClient, mock_db_session: AsyncMock
     ):

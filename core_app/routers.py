@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Query
 
 from core_app.db.connection import get_db
 from core_app.services import token_auth
-from core_app.db.models import GroupBy, Lead
+from core_app.models import GroupBy, Lead
 from core_app.schemas import LeadResponseSchema, DateGroupSchema, OfferGroupSchema
 
 router = APIRouter()
@@ -18,7 +18,7 @@ router = APIRouter()
 async def get_leads(
     date_from: date = Query(..., description="Start date for filtering leads"),
     date_to: date = Query(..., description="End date for filtering leads"),
-    date_group: GroupBy = Query(..., description="Grouping criteria: 'date' or 'offer'"),
+    date_group: GroupBy = Query(..., alias="group", description="Grouping criteria: 'date' or 'offer'"),
     affiliate_id: UUID = Depends(token_auth),
     db: AsyncSession = Depends(get_db),
 ):
