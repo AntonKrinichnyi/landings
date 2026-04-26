@@ -4,15 +4,15 @@ from datetime import datetime
 from pydantic import BaseModel
 
 class LeadResponseSchema(BaseModel):
-    id: uuid
+    id: uuid.UUID
     name: str
     phone: str
     country: str
-    offer_id: uuid
-    affiliate_id: uuid
+    offer_id: uuid.UUID
+    affiliate_id: uuid.UUID
     created_at: datetime
 
 class OfferGroupSchema(BaseModel):
-    id: uuid
+    id: uuid.UUID
     name: str
     leads: list[LeadResponseSchema]
