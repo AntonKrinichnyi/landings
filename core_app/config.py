@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     DB_HOST: str
     DB_PORT: int
     DB_NAME: str
+
+    REDIS_URL: str
     
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"

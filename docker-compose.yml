@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: app
-      POSTGRES_PASSWORD: app
-      POSTGRES_DB: leads_db
+      POSTGRES_USER: app_user
+      POSTGRES_PASSWORD: app_password
+      POSTGRES_DB: postgres
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d leads_db"]
+      test: ["CMD-SHELL", "pg_isready -U app_user -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -51,7 +51,7 @@ services:
       redis:
         condition: service_healthy
     command: >
-      sh -c "alembic upgrade head && uvicorn core_app.main:app --host 0.0.0.0 --port 8000"
+      sh -c "alembic -c core_app/db/alembic.ini upgrade head && uvicorn core_app.main:app --host 0.0.0.0 --port 8000"
 
 volumes:
   pgdata:
