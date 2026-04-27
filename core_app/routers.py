@@ -10,6 +10,7 @@ from core_app.db.connection import get_db
 from core_app.services import token_auth
 from core_app.models import GroupBy, Lead
 from core_app.schemas import LeadResponseSchema, DateGroupSchema, OfferGroupSchema
+from core_app.worker import logger
 
 router = APIRouter()
 
@@ -22,6 +23,7 @@ async def get_leads(
     affiliate_id: UUID = Depends(token_auth),
     db: AsyncSession = Depends(get_db),
 ):
+    logger.info("GET /leads requested by affiliate: %s (date_from=%s, date_to=%s, group=%s)", affiliate_id, date_from, date_to, date_group)
     date_from_dt = datetime.combine(date_from, datetime.min.time())
     date_to_dt = datetime.combine(date_to, datetime.max.time())
 
@@ -35,6 +37,7 @@ async def get_leads(
     )
     result = await db.execute(stmt)
     leads = result.scalars().all()
+    logger.info("Retrieved %d leads for affiliate: %s", len(leads), affiliate_id)
 
     if date_group == GroupBy.date:
         buckets: dict[str, list[Lead]] = {}
