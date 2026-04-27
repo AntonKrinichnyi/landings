@@ -15,11 +15,45 @@ from core_app.worker import logger
 router = APIRouter()
 
 
-@router.get("/leads", response_model=list[DateGroupSchema | OfferGroupSchema])
+@router.get(
+    "/leads",
+    response_model=list[DateGroupSchema | OfferGroupSchema],
+    description="Retrieve leads for the authenticated affiliate within a specified date range. Results can be grouped by date or offer.",
+    responses={
+        200: {
+            "description": "Leads successfully retrieved and grouped",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "date": "2024-01-15",
+                            "count": 3,
+                            "leads": [
+                                {
+                                    "id": "550e8400-e29b-41d4-a716-446655440000",
+                                    "name": "John Doe",
+                                    "phone": "+1234567890",
+                                    "country": "US",
+                                    "offer_id": "550e8400-e29b-41d4-a716-446655440001",
+                                    "affiliate_id": "550e8400-e29b-41d4-a716-446655440002",
+                                    "created_at": "2024-01-15T10:30:00"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+        400: {"description": "Invalid query parameters (e.g., invalid date format or group value)"},
+        401: {"description": "Missing or invalid authentication token"},
+        422: {"description": "Validation error in request parameters"},
+    },
+    tags=["Leads"],
+)
 async def get_leads(
-    date_from: date = Query(..., description="Start date for filtering leads"),
-    date_to: date = Query(..., description="End date for filtering leads"),
-    date_group: GroupBy = Query(..., alias="group", description="Grouping criteria: 'date' or 'offer'"),
+    date_from: date = Query(..., description="Start date for filtering leads (format: YYYY-MM-DD)"),
+    date_to: date = Query(..., description="End date for filtering leads (format: YYYY-MM-DD)"),
+    date_group: GroupBy = Query(..., alias="group", description="Grouping criteria: 'date' to group by creation date or 'offer' to group by offer ID"),
     affiliate_id: UUID = Depends(token_auth),
     db: AsyncSession = Depends(get_db),
 ):

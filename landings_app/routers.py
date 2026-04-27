@@ -9,7 +9,26 @@ from landings_app.services import token_auth, get_redis, logger
 router = APIRouter()
 
 
-@router.post("/lead", status_code=status.HTTP_200_OK)
+@router.post(
+    "/lead",
+    status_code=status.HTTP_200_OK,
+    description="Submit a new lead from a landing page for processing. The lead is validated and queued for asynchronous persistence to the database.",
+    responses={
+        200: {
+            "description": "Lead successfully queued for processing",
+            "content": {
+                "application/json": {
+                    "example": {"status": "queued"}
+                }
+            }
+        },
+        400: {"description": "Invalid lead data (missing required fields or invalid format)"},
+        401: {"description": "Missing or invalid authentication token"},
+        403: {"description": "Affiliate ID in request body does not match the authenticated token"},
+        422: {"description": "Validation error in lead data"},
+    },
+    tags=["Leads"],
+)
 async def create_lead(
     lead: LeadCreateSchema,
     affiliate_id: UUID = Depends(token_auth),
