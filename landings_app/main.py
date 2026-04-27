@@ -10,11 +10,21 @@ from landings_app.services import logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Manage FastAPI application lifecycle events.
+    
+    Initializes Redis client on startup and gracefully closes the
+    connection on application termination.
+    
+    Args:
+        app: FastAPI application instance.
+        
+    Yields:
+        None
+    """
     logger.info("Starting Landings App initialization")
     app.state.redis = sync_redis.from_url(settings.REDIS_URL, decode_responses=True)
     logger.info("Redis client connected")
     yield
-    logger.info("Shutting down Landings App")
     await app.state.redis.aclose()
     logger.info("Redis client closed")
 

@@ -16,10 +16,36 @@ DEDUP_TTL = 600  # 10 minutes window
 
 
 def _dedup_key(name: str, phone: str, offer_id: str, affiliate_id: str) -> str:
+    """Generate a deduplication key for a lead.
+    
+    Creates a unique key combining lead attributes to identify and prevent
+    duplicate lead submissions within the TTL window.
+    
+    Args:
+        name: Lead's full name.
+        phone: Lead's phone number.
+        offer_id: ID of the offer the lead is interested in.
+        affiliate_id: ID of the affiliate who submitted the lead.
+        
+    Returns:
+        str: Formatted deduplication key.
+    """
     return f"dedup:{name}:{phone}:{offer_id}:{affiliate_id}"
 
 
 async def _process_lead(redis_client: aioredis.Redis, raw: str) -> None:
+    """Process and persist a lead from queue data.
+    
+    Parses JSON lead data from the queue, checks for duplicates using Redis
+    with a TTL window, and persists new leads to the database.
+    
+    Args:
+        redis_client: Redis async client for deduplication checks.
+        raw: JSON string containing lead data.
+        
+    Returns:
+        None
+    """
     data = json.loads(raw)
 
     dedup_key = _dedup_key(

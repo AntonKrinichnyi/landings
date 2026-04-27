@@ -23,6 +23,23 @@ async def get_leads(
     affiliate_id: UUID = Depends(token_auth),
     db: AsyncSession = Depends(get_db),
 ):
+    """Retrieve leads for an affiliate filtered by date range.
+    
+    Fetches leads created by the authenticated affiliate within the specified
+    date range and groups them by either date or offer based on the request.
+    
+    Args:
+        date_from: Start date for filtering leads (inclusive).
+        date_to: End date for filtering leads (inclusive).
+        date_group: Grouping criteria - 'date' to group by date,
+            'offer' to group by offer.
+        affiliate_id: UUID of authenticated affiliate (from token).
+        db: Async database session.
+        
+    Returns:
+        List of DateGroupSchema or OfferGroupSchema objects containing
+            grouped lead data with counts and details.
+    """
     logger.info("GET /leads requested by affiliate: %s (date_from=%s, date_to=%s, group=%s)", affiliate_id, date_from, date_to, date_group)
     date_from_dt = datetime.combine(date_from, datetime.min.time())
     date_to_dt = datetime.combine(date_to, datetime.max.time())

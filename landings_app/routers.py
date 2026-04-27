@@ -15,6 +15,24 @@ async def create_lead(
     affiliate_id: UUID = Depends(token_auth),
     redis=Depends(get_redis),
 ):
+    """Create and queue a new lead for processing.
+    
+    Validates that the affiliate ID in the request body matches the
+    authenticated token, then pushes the lead data to the Redis queue
+    for asynchronous processing.
+    
+    Args:
+        lead: Lead data containing name, phone, country, offer_id, and affiliate_id.
+        affiliate_id: UUID of authenticated affiliate (from token).
+        redis: Redis async client for queue operations.
+        
+    Returns:
+        dict: Status confirmation with "queued" message.
+        
+    Raises:
+        HTTPException: If affiliate_id in body does not match authenticated
+            token (status 403).
+    """
     logger.info("POST /lead requested by affiliate: %s (offer_id=%s)", affiliate_id, lead.offer_id)
     if lead.affiliate_id != affiliate_id:
         logger.warning("Forbidden: affiliate_id mismatch - token=%s, body=%s", affiliate_id, lead.affiliate_id)

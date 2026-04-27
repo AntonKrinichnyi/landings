@@ -14,12 +14,35 @@ logger = logging.getLogger(__name__)
 _token_auth_scheme = HTTPBearer()
 
 async def get_redis(request: Request):
+    """Retrieve Redis client from application state.
+    
+    Args:
+        request: FastAPI request object.
+        
+    Returns:
+        Redis async client instance.
+    """
     return request.app.state.redis
 
 
 async def token_auth(
     credentials: HTTPAuthorizationCredentials = Depends(_token_auth_scheme),
 ) -> UUID:
+    """Validate JWT token and extract affiliate ID.
+    
+    Decodes and validates the JWT token from the Authorization header,
+    extracts the affiliate ID claim, and returns it as a UUID.
+    
+    Args:
+        credentials: HTTP Bearer token credentials.
+        
+    Returns:
+        UUID: The affiliate ID extracted from the token.
+        
+    Raises:
+        HTTPException: If token is invalid, missing required claims, or
+            fails JWT validation (status 401).
+    """
     try:
         payload = jwt.decode(
             credentials.credentials,

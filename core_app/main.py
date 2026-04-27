@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -8,14 +7,21 @@ from redis import asyncio as async_redis
 from core_app.routers import router
 from core_app.config import settings
 from core_app.db.connection import engine
-from core_app.worker import worker_loop
-
-logger = logging.getLogger(__name__)
-
+from core_app.worker import worker_loop, logger
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Starting Core App initialization")
+    """Manage FastAPI application lifecycle events.
+    
+    Initializes Redis client and worker task on startup, and gracefully
+    shuts down all resources on application termination.
+    
+    Args:
+        app: FastAPI application instance.
+        
+    Yields:
+        None
+    """
     redis_client = async_redis.from_url(settings.REDIS_URL, decode_responses=True)
     app.state.redis = redis_client
     logger.info("Redis client connected")
@@ -25,10 +31,8 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    logger.info("Shutting down Core App")
     worker_task.cancel()
     await asyncio.gather(worker_task, return_exceptions=True)
-    logger.info("Worker task cancelled")
     await redis_client.aclose()
     logger.info("Redis client closed")
     await engine.dispose()
